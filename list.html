@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+  <style>
+  <!--
+  .wrapper{
+  width: 100%;
+  }
+  .elem{
+  float:left;
+  margin: 10px;
+  border: 1px solid #000;
+  padding: 10px;
+  }
+  
+  .navbar {min-height:15px !important;}
+  -->
+  </style>
+    <base target="_top">
+  </head>
+  <body>
+  <nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <div style="float:left" id="lastupdate">Last Updated: Never</div><div id="spinner" style="float:left;margin-left:10px;"></div>
+    </div>
+    </div>
+    </nav>
+    <div class="wrapper">
+    Loading....
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+    <script>
+    var stateCache = {}
+    var colourCache = {}
+    var lastUpdate = "Never"
+    
+    function setStateCache(out){
+      // This is a convenience function for the successHandler
+      stateCache = out
+    }
+    
+    function setColourCache(out){
+      // This is a convenience function for the successHandler
+      colourCache = out
+    }
+    
+    $(function () {
+      // This hides the modal box until we need it
+      $('#modal').modal('hide')
+    });
+    
+    function replaceData(out){
+      // This function is another convenience function for the successHandler.
+      // First it replaces all the data in wrapper div and then updates the buttons.
+      $('.wrapper').html(out)
+      updateButtons();
+    }
+    
+    function refreshPage(out){
+      // The refresh page function is almost identical to replaceData, except it
+      // hides the modal before replacing and hooking up buttons.
+      $('#modal').modal('hide')
+      $('.wrapper').html(out)
+      updateButtons();
+    }
+    
+    function updateButtons(){
+      // This looks rather nasty, but it's a chained system and without it
+      // being chaing things happen out of sync. First we get the statecache,
+      // then we get the colourcache, then AFTER that, we can sync up the buttons
+      // with their respective handlers.
+      google.script.run.withSuccessHandler(function (statecacheout){
+        setStateCache(statecacheout);
+        google.script.run.withSuccessHandler(function (colourcacheout){
+          setColourCache(colourcacheout);
+          syncButtons()
+          }).colourCache();
+      }).flowsForStates();
+    }
+
+    function syncButtons(){
+      // This function iterates all of the orders on the page and hooks up the buttons to open
+      // the modal and set up the data. Notice the modal show is the last thing to be done.
+      // This avoids the box flickering whilst it fills with data.
+      $("[data-id!=''][data-id]").each(function() {
+        $( this ).click(function(){
+          var did = $( this ).attr('data-id');
+          $('#order_title').html(did);
+          var buttons = '<form action="#"><input type="hidden" name="oid" value="' + did + '">';
+          var state = $(this).attr('data-state');
+          for (state_counter in stateCache[state]){
+            buttons += '<button type="button" name="op" value="' + stateCache[state][state_counter][0] + '" class="btn btn-'+colourCache[stateCache[state][state_counter][0]]+' btn-lg" onclick="google.script.run.withSuccessHandler(refreshPage).updateSheet(\''+did+'\', \''+stateCache[state][state_counter][0]+'\')">'+stateCache[state][state_counter][1]+'</button>'
+          }
+          buttons += "</form>";
+          $('#buttons').html(buttons);
+          $('#modal').modal('show');
+        });
+      });
+      $('#spinner').html('')
+      $('#lastupdate').html('Last Updated: ' + lastUpdate)
+    };
+    
+    function updateScreen(){
+      // This is a self running function, that attempts to re run itself every 10 seconds
+      // assuming the modal isn't open. If the modal is open, it doesn't run.
+      google.script.run.withSuccessHandler(function (lastUpdateTime){
+      if (lastUpdateTime != lastUpdate){
+        if (!$('#myModal').hasClass('in')){
+          $('#spinner').html('<i class="fa fa-spinner fa-pulse"></i>')
+          google.script.run.withSuccessHandler(replaceData).genOutput();
+          lastUpdate = lastUpdateTime
+          };
+        }
+      }).getLastUpdateTime()
+      window.setTimeout(updateScreen, 10000);
+    };
+    
+    $(document).ready(function(){
+      // When the document is "ready" (jQuery speak) we load the data and set a timeout
+      // to refresh it.
+      var out = google.script.run.withSuccessHandler(replaceData).genOutput();
+      window.setTimeout(updateScreen, 10000);
+    });
+
+    </script>
+    
+    <div class="modal" id='modal'>
+      <div class="modal-header">
+      </div>
+        <div class="modal-body">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>Update process for <span id="order_title"></span>
+          </div>
+          <div class="panel-body" id="buttons">
+          </div>
+        </div>
+    </div>
+   </div>
+  </body>
+</html>

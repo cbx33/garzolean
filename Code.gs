@@ -1,21 +1,19 @@
-// Version 0.8
+// Version 0.9
 // TODOs:
 // * Make column names variables at the top
 // * Use the whole object instead of using the transport system to create simpler objects
 // * Don't use the awful panel handling, but return the objects in their date containers so panel handling is easier
-// * Check if the document is updated before running update code - DONE
-// * Urgent order handling (new column) glyph + bold - DONE
-// * Make finihed state a list, not a string "P"  ->  ["P", "K"] - DONE
 
 // These are broken out from the code so that if at any point you wanted to change the spreadsheet it
 // pointed to, or change the sheet names, you could. This is also useful for development, as it means
 // you can copy this whole file and just change a few variables to get it to look at an entirely new
 // spreadsheet.
-var internals_sheet = "<insert internals sheet id>"
-var orders_sheet = "<insert order sheet id>"
-var orders_sheet_name = "<order sheet name>"
+var internals_sheet = "1bS74m5a9TqB0Ao5Hpp32rIT4jnQo1MbQ4Evx2-ZUSog"
+var orders_sheet = "1u4P9BDXJ4EdRsqktrCWAX0Wdj2wNchHVTL266_HNto8"
+var orders_sheet_name = "Sheet9"
 var colours_sheet_name = "Colours"
 var stateflow_sheet_name = "StateFlows"
+var order_complete = "Delivery #"
 var finished_state = ["P"]
 
 function getOrder(){
@@ -57,7 +55,7 @@ function getFlows(){
   for (var i in data){
     c[i] = []
     for (var j in data){
-      //i, j = i, j ## No swapping or anything here, one to one mapping. Can I just return as is?
+      //i, j = i, j ## No swapping or anything here, one to one mapping.
       c[i][j] = data[i][j]
     }
   }
@@ -182,6 +180,7 @@ function sortTP(a, b)
   // same we return 0. (It could be the other way around, but the principle is the same)
   // To start with we first compare if it has a date or not, that's the first groupings. Ones
   // that don't have a date are placed at the the end.
+  
   d1string = a['Collection Date']
   d2string = b['Collection Date']
   if ((d1string == "") && !(d2string == "")){
@@ -198,7 +197,15 @@ function sortTP(a, b)
   if (dd != 0){
     return dd
   }
-  
+
+  // We now check the Urgent flag.
+  if ((a['Urgent'] == "") && !(b['Urgent'] == "")){
+    return 1
+  }
+  if ((b['Urgent'] == "") && !(a['Urgent'] == "")){
+    return -1
+  }
+
   // If the dates are the same, we get into the last block here which compares the
   // order of the states and reverses them. Putting the b before the a accomplishes
   // the reversing nature.
@@ -223,7 +230,7 @@ function processData(data){
   // Now we iterate through all the records
   for (var row = 0; row < data.length; row++){
     // If the state is not the "finished" state, then we need to return the record to be displayed.
-    if (finished_state.indexOf(data[row][headers['Tick box']]) == -1)
+    if ((finished_state.indexOf(data[row][headers['Tick box']]) == -1) && (data[row][headers[order_complete]] != ''))
     {
       // Now we iterate through each of the headers to create our "object", it could be that just passing
       // the whole object is just as quick. I'm not sure why I did it this way, but it works. If things get slow

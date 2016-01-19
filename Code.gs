@@ -8,8 +8,8 @@
 // pointed to, or change the sheet names, you could. This is also useful for development, as it means
 // you can copy this whole file and just change a few variables to get it to look at an entirely new
 // spreadsheet.
-var internals_sheet = "1bS74m5a9TqB0Ao5Hpp32rIT4jnQo1MbQ4Evx2-ZUSog"
-var orders_sheet = "1u4P9BDXJ4EdRsqktrCWAX0Wdj2wNchHVTL266_HNto8"
+var internals_sheet = "<>"
+var orders_sheet = "<>"
 var orders_sheet_name = "Sheet9"
 var colours_sheet_name = "Colours"
 var stateflow_sheet_name = "StateFlows"
